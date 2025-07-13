@@ -2,6 +2,11 @@ mod assets;
 mod extra;
 mod player;
 
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+};
+
 use bevy::{core_pipeline::motion_blur::MotionBlur, math::Affine2, prelude::*};
 use bevy_editor_pls::prelude::*;
 use bevy_fps_controller::controller::*;
@@ -49,24 +54,44 @@ fn startup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     assets: Res<GameAssets>,
 ) {
-    commands.spawn((
-        Mesh3d(meshes.add(Cuboid::new(40.0, 0.01, 40.0))),
-        //MeshMaterial3d(materials.add(Color::srgb(0.3, 0.5, 0.3))),
-        MeshMaterial3d(materials.add(StandardMaterial {
-            base_color_texture: Some(assets.tiles.clone()),
-            uv_transform: Affine2::from_scale(Vec2::splat(10.0)),
-            ..default()
-        })),
-        Transform::from_translation(Vec3::new(0.0, -0.5, 1.0)),
-        RigidBody::Fixed,
-        Collider::cuboid(20.0, 0.01, 20.0),
-    ));
+    //commands.spawn((
+    //    Mesh3d(meshes.add(Cuboid::new(40.0, 0.01, 40.0))),
+    //    //MeshMaterial3d(materials.add(Color::srgb(0.3, 0.5, 0.3))),
+    //    MeshMaterial3d(materials.add(StandardMaterial {
+    //        base_color_texture: Some(assets.tiles.clone()),
+    //        uv_transform: Affine2::from_scale(Vec2::splat(10.0)),
+    //        ..default()
+    //    })),
+    //    Transform::from_translation(Vec3::new(0.0, -0.5, 1.0)),
+    //    RigidBody::Fixed,
+    //    Collider::cuboid(20.0, 0.01, 20.0),
+    //));
+
+    let file = File::open("./level.txt").unwrap();
+    let reader = BufReader::new(file);
+    for (y, line) in reader.lines().enumerate() {
+        for (x, c) in line.unwrap().chars().enumerate() {
+            for z in 0..=c.to_digit(10).unwrap() {
+                commands.spawn((
+                    Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
+                    MeshMaterial3d(materials.add(StandardMaterial {
+                        base_color_texture: Some(assets.tiles.clone()),
+                        uv_transform: Affine2::from_scale(Vec2::splat(1.0)),
+                        ..default()
+                    })),
+                    Transform::from_translation(Vec3::new(x as f32, z as f32, y as f32)),
+                    RigidBody::Fixed,
+                    Collider::cuboid(0.5, 0.5, 0.5),
+                ));
+            }
+        }
+    }
 
     commands.spawn((
         Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
         MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
-        Transform::from_xyz(4.0, 0.0, 0.0),
-        RigidBody::Fixed,
+        Transform::from_xyz(4.0, 5.0, 0.0),
+        RigidBody::Dynamic,
         Collider::cuboid(0.5, 0.5, 0.5),
     ));
 
@@ -98,6 +123,7 @@ fn startup(
 
     commands.spawn((
         Camera3d::default(),
+        Projection::Perspective(PerspectiveProjection { fov: 80.0f32.to_radians(), ..default() }),
         Transform::from_xyz(-0.05, 0.1, 0.3).looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
         RenderPlayer {
             logical_entity: player,

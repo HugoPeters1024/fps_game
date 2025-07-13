@@ -28,7 +28,7 @@ fn on_spawn(mut commands: Commands, target: Query<Entity, Added<Player>>, assets
             Collider::capsule_y(0.8, 0.5),
             RigidBody::Dynamic,
             Friction {
-                coefficient: 0.0,
+                coefficient: 0.3,
                 combine_rule: CoefficientCombineRule::Min,
             },
             Restitution {
@@ -61,7 +61,7 @@ fn on_spawn(mut commands: Commands, target: Query<Entity, Added<Player>>, assets
             DelayedTransform::default(),
             children![(
                 InheritedVisibility::default(),
-                Transform::from_xyz(0.04, -0.1, -0.4),
+                Transform::from_xyz(0.04, -0.1, -0.3),
                 children![(
                     GunWobble,
                     children![(
