@@ -18,7 +18,7 @@ struct GunWobble;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(PreUpdate, on_spawn.run_if(in_state(GameState::Next)))
-            .add_systems(Update, (gun_wobbles, manage_cursor));
+            .add_systems(Update, (gun_wobbles, manage_cursor, keyboard_controls_camera));
     }
 }
 
@@ -100,6 +100,28 @@ fn manage_cursor(
             for mut controller in &mut controller_query {
                 controller.enable_input = false;
             }
+        }
+    }
+}
+
+fn keyboard_controls_camera(
+    mut controller_query: Query<&mut FpsControllerInput>,
+    key: Res<ButtonInput<KeyCode>>,
+    time: Res<Time>
+) {
+    const ROTATION_SPEED: f32 = 2.5;
+    for mut controller in &mut controller_query {
+        if key.pressed(KeyCode::ArrowUp) {
+            controller.pitch += ROTATION_SPEED * time.delta_secs();
+        }
+        if key.pressed(KeyCode::ArrowDown) {
+            controller.pitch -= ROTATION_SPEED * time.delta_secs();
+        }
+        if key.pressed(KeyCode::ArrowLeft) {
+            controller.yaw += ROTATION_SPEED * time.delta_secs();
+        }
+        if key.pressed(KeyCode::ArrowRight) {
+            controller.yaw -= ROTATION_SPEED * time.delta_secs();
         }
     }
 }

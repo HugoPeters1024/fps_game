@@ -135,8 +135,8 @@ fn startup(
         },
     ));
 
-    commands.spawn((Transform::from_xyz(5.0, 0.0, 5.0), Enemy));
-    commands.spawn((Transform::from_xyz(10.0, 0.0, 5.0), Enemy));
+    commands.spawn((Transform::from_xyz(5.0, 2.0, 5.0), Enemy));
+    commands.spawn((Transform::from_xyz(10.0, 2.0, 5.0), Enemy));
 }
 
 fn test(
@@ -156,7 +156,7 @@ fn test(
                 .unwrap()
                 .cast_ray(origin, direction, 100.0, true, filter)
             {
-                target.translation = origin + dist * direction;
+                target.translation = origin + direction * dist;
             }
         }
     }

@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
+use bevy_rapier3d::prelude::*;
 
 use crate::{
     assets::{GameAssets, GameState},
@@ -23,9 +24,15 @@ impl Plugin for EnemyPlugin {
 
 fn on_spawn(mut commands: Commands, q: Query<Entity, Added<Enemy>>, assets: Res<GameAssets>) {
     for entity in q.iter() {
-        commands.entity(entity).with_child((
-            SceneRoot(assets.cesium_man.clone()),
-            Transform::from_scale(Vec3::splat(2.0)).with_translation(Vec3::new(0.0, 0.5, 0.0)),
+        commands.entity(entity).insert((
+            RigidBody::Dynamic,
+            Collider::capsule_y(0.8, 0.3),
+            LockedAxes::ROTATION_LOCKED,
+            InheritedVisibility::default(),
+            children![(
+                SceneRoot(assets.cesium_man.clone()),
+                Transform::from_scale(Vec3::splat(2.0)).with_translation(Vec3::new(0.0, -1.0, 0.0)),
+            )],
         ));
     }
 }
@@ -68,13 +75,17 @@ fn enemy_follows_player(
         let Ok(mut enemy_transform) = t.get_mut(enemy) else {
             return;
         };
-        let to_player = (player_transform.translation() - enemy_transform.translation).xz().normalize();
+        let to_player = (player_transform.translation() - enemy_transform.translation)
+            .xz()
+            .normalize();
         let current_dir = (enemy_transform.rotation * Vec3::Z).xz().normalize();
         let final_rotation = Quat::from_rotation_arc(
             Vec3::new(current_dir.x, 0.0, current_dir.y),
             Vec3::new(to_player.x, 0.0, to_player.y),
         );
-        enemy_transform.rotation = enemy_transform.rotation.slerp(enemy_transform.rotation * final_rotation, 0.1);
+        enemy_transform.rotation = enemy_transform
+            .rotation
+            .slerp(enemy_transform.rotation * final_rotation, 0.03);
         enemy_transform.translation += Vec3::new(to_player.x, 0.0, to_player.y) * 0.05;
     }
 }
