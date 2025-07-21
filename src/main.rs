@@ -44,7 +44,7 @@ fn main() {
         .add_plugins((GameAssetPlugin, PlayerPlugin, ExtraPlugins))
         .insert_resource(ClearColor(CORNFLOWER_BLUE))
         .add_systems(OnEnter(GameState::Next), startup)
-        .add_systems(Update, test)
+        .add_systems(PostUpdate, test)
         .run();
 }
 
@@ -90,9 +90,14 @@ fn startup(
     commands.spawn((
         Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
         MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
-        Transform::from_xyz(4.0, 5.0, 0.0),
+        Transform::from_xyz(8.0, 5.0, 8.0),
         RigidBody::Dynamic,
         Collider::cuboid(0.5, 0.5, 0.5),
+        ColliderMassProperties::Mass(400.0),
+        Friction {
+                coefficient: 0.99,
+                combine_rule: CoefficientCombineRule::Max,
+            },
     ));
 
     commands.spawn((
@@ -110,6 +115,7 @@ fn startup(
         .spawn((
             Player,
             Transform::from_translation(Vec3::new(0.0, 2.6, 0.0)),
+            ColliderMassProperties::Mass(80.0),
         ))
         .id();
 
@@ -123,7 +129,10 @@ fn startup(
 
     commands.spawn((
         Camera3d::default(),
-        Projection::Perspective(PerspectiveProjection { fov: 80.0f32.to_radians(), ..default() }),
+        Projection::Perspective(PerspectiveProjection {
+            fov: 60.0f32.to_radians(),
+            ..default()
+        }),
         Transform::from_xyz(-0.05, 0.1, 0.3).looking_at(Vec3::new(0.0, 0.1, 0.0), Vec3::Y),
         RenderPlayer {
             logical_entity: player,
@@ -139,6 +148,7 @@ fn startup(
 }
 
 fn test(
+    fps_controller: Query<Entity, With<FpsController>>,
     source: Query<(&GlobalTransform, &ControlViewTarget)>,
     mut target: Query<&mut Transform, With<ViewTarget>>,
     rapier_context: ReadRapierContext,
@@ -146,14 +156,15 @@ fn test(
     for (gt, target_entity) in source.iter() {
         if let Ok(mut target) = target.get_mut(target_entity.target) {
             let direction = gt.rotation() * Vec3::NEG_Z;
-            let origin = gt.translation() + 1.0 * direction;
-            let filter = QueryFilter::new().exclude_collider(target_entity.target);
-            if let (Some((result, dist))) = rapier_context
+            let origin = gt.translation();
+            let predicate = |e| !fps_controller.contains(e);
+            let filter = QueryFilter::new().predicate(&predicate);
+            if let Some((_, dist)) = rapier_context
                 .single()
                 .unwrap()
                 .cast_ray(origin, direction, 100.0, true, filter)
             {
-                target.translation = origin + dist.max(2.0) * direction;
+                target.translation = origin + dist.max(0.0) * direction;
             }
         }
     }

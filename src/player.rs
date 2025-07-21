@@ -28,11 +28,11 @@ fn on_spawn(mut commands: Commands, target: Query<Entity, Added<Player>>, assets
             Collider::capsule_y(0.8, 0.5),
             RigidBody::Dynamic,
             Friction {
-                coefficient: 0.3,
+                coefficient: 0.2,
                 combine_rule: CoefficientCombineRule::Min,
             },
             Restitution {
-                coefficient: 0.0,
+                coefficient: 0.1,
                 combine_rule: CoefficientCombineRule::Min,
             },
             ActiveEvents::COLLISION_EVENTS,
