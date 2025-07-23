@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{f32::consts::PI, time::Duration};
 
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
@@ -34,10 +34,23 @@ fn on_spawn(mut commands: Commands, q: Query<Entity, Added<Enemy>>, assets: Res<
             },
             InheritedVisibility::default(),
             ExternalForce::default(),
-            children![(
-                SceneRoot(assets.cesium_man.clone()),
-                Transform::from_scale(Vec3::splat(2.0)).with_translation(Vec3::new(0.0, -1.0, 0.0)),
-            )],
+            children![
+                (
+                    SpotLight {
+                        color: Color::linear_rgb(0.80, 0.2, 0.2),
+                        shadows_enabled: false,
+                        intensity: 1_000_000.,
+                        range: 50.0,
+                        ..default()
+                    },
+                    Transform::from_xyz(0.0, 3.0, 0.0).with_rotation(Quat::from_rotation_y(PI) * Quat::from_rotation_x(-PI/4.0)),
+                ),
+                (
+                    SceneRoot(assets.cesium_man.clone()),
+                    Transform::from_scale(Vec3::splat(2.0))
+                        .with_translation(Vec3::new(0.0, -1.0, 0.0)),
+                )
+            ],
         ));
     }
 }

@@ -44,7 +44,11 @@ fn main() {
         .add_plugins(FpsControllerPlugin)
         .add_plugins(EditorPlugin::default())
         .add_plugins((GameAssetPlugin, PlayerPlugin, EnemyPlugin, ExtraPlugins))
-        .insert_resource(ClearColor(CORNFLOWER_BLUE))
+        .insert_resource(ClearColor(CORNFLOWER_BLUE.darker(0.0)))
+        .insert_resource(AmbientLight {
+            brightness: 1.0,
+            ..default()
+        })
         .add_systems(OnEnter(GameState::Next), startup)
         .add_systems(PostUpdate, (test).run_if(in_state(GameState::Next)))
         .run();
@@ -90,14 +94,12 @@ fn startup(
     ));
 
     commands.spawn((
-        PointLight {
+        DirectionalLight {
             shadows_enabled: true,
-            intensity: 1_000_000.,
-            range: 100.0,
-            shadow_depth_bias: 0.2,
+            illuminance: light_consts::lux::DARK_OVERCAST_DAY,
             ..default()
         },
-        Transform::from_xyz(8.0, 16.0, 8.0),
+        Transform::from_xyz(3.0, 3.0, 3.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 
     let player = commands
