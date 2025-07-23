@@ -28,7 +28,12 @@ fn on_spawn(mut commands: Commands, q: Query<Entity, Added<Enemy>>, assets: Res<
             RigidBody::Dynamic,
             Collider::capsule_y(0.8, 0.3),
             LockedAxes::ROTATION_LOCKED,
+            Damping {
+                linear_damping: 4.00,
+                angular_damping: 0.0,
+            },
             InheritedVisibility::default(),
+            ExternalForce::default(),
             children![(
                 SceneRoot(assets.cesium_man.clone()),
                 Transform::from_scale(Vec3::splat(2.0)).with_translation(Vec3::new(0.0, -1.0, 0.0)),
@@ -64,6 +69,7 @@ fn enemy_follows_player(
     player: Query<Entity, With<Player>>,
     enemies: Query<Entity, With<Enemy>>,
     gt: Query<&GlobalTransform>,
+    mut forces: Query<&mut ExternalForce>,
     mut t: Query<&mut Transform>,
 ) {
     let Ok(player) = player.single() else { return };
@@ -75,6 +81,11 @@ fn enemy_follows_player(
         let Ok(mut enemy_transform) = t.get_mut(enemy) else {
             return;
         };
+
+        let Ok(mut enemy_force) = forces.get_mut(enemy) else {
+            return;
+        };
+
         let to_player = (player_transform.translation() - enemy_transform.translation)
             .xz()
             .normalize();
@@ -86,6 +97,7 @@ fn enemy_follows_player(
         enemy_transform.rotation = enemy_transform
             .rotation
             .slerp(enemy_transform.rotation * final_rotation, 0.03);
-        enemy_transform.translation += Vec3::new(to_player.x, 0.0, to_player.y) * 0.05;
+
+        enemy_force.force = Vec3::new(to_player.x, 0.0, to_player.y) * 10.00;
     }
 }
